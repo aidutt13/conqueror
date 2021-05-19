@@ -1,0 +1,71 @@
+﻿# This CMakeList.txt currently only supports compilation of
+# a program on windows or linux, but only with the dependancies
+# for oclPixelGameEngine.h
+
+# NOTE: THIS CMAKELIST WILL NOT INSTALL DEPENDANCIES, IT WILL JUST FIND THEM AND
+# COMPILE / LINK THEM RESPECTIVELY, YOU NEED TO INSTALL THEM YOURSELF
+
+# Any problems? submit an issue, or contact the author, "Ben (plane000)#8618" on Discord
+
+# Currently linked / compiled by default is:
+# Threads (pthread), OpenGL, GLX, libPNG, X11
+
+
+cmake_minimum_required(VERSION 3.7)
+project(coh)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} CMakeFiles/)
+if (MSVC_VERSION GREATER_EQUAL "1900")
+    include(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG("/std:c++latest" _cpp_latest_flag_supported)
+    if (_cpp_latest_flag_supported)
+        add_compile_options("/std:c++latest")
+    endif()
+endif()
+set(Executable output)
+set(SourceDir src) # Change src/ to your source directory
+
+set(IncludeDir include/) # Change include/ to your include directory
+include_directories(${IncludeDir})
+
+file(GLOB_RECURSE SourceFiles
+    ${SourceDir}/*.cpp
+)
+
+set(THREADS_PREFER_PTHREAD_FLAD ON)
+find_package(Threads REQUIRED)
+
+find_package(OpenGL REQUIRED)
+
+if (UNIX)
+    find_package(X11 REQUIRED)
+    find_package(PNG REQUIRED)
+    include_directories(${PNG_INCLUDE_DIR})
+endif (UNIX)
+
+if (WIN32)
+    include_directories(${WinSDK})
+endif (WIN32)
+
+add_executable(${Executable} 
+    ${SourceFiles}
+)
+
+link_libraries(${Executable}
+    Threads::Threads
+    OpenGL::OpenGL
+    OpenGL::GL
+    OpenGL::GLX
+)
+
+if (UNIX) 
+    target_link_libraries(${Executable} 
+        ${X11_LIBRARIES}
+        PNG::PNG
+    )
+endif (UNIX)
+if (WIN32)
+    target_link_libraries(${Executable} 
+        ${WinSDK}
+    )
+endif (WIN32)
